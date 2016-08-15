@@ -238,6 +238,45 @@ struct TreasureLocation {
 }
 ```
 
+# Map (II)
+
+Head back to the `MapViewController.swift` file. Lets create another extension, labeling it as "Treasure Methods"
+
+```swift
+// MARK: - Treasure Methods
+extension MapViewController {
+     
+}
+```
+
+Our treasures are stored in Firebase as JSON. What does that mean?
+
+![](http://i.imgur.com/tkIdqmr.png?1)
+
+Well, we have a base URL which acts as our firebase reference. The name of this location is flatiron-go. At this location we have two other locations, one named `treasureLocations` and the other named `treasureProfiles`. Lets do some digging into the `treasureProfiles`.
+
+![](http://i.imgur.com/NIm49XJ.png?1)
+
+Lets look a little closer at one of these items. The first one.
+
+![](http://i.imgur.com/taAmtKo.png?1)
+
+The `kMrX9X2cUklCtYYjS9K` is a `key` within the `treasuresProfiles` location. With this `key`, we have access to another dictionary with two `key-value` pairs. One `key` is named `imageURL` where the value is  `String` representing a URL. The other `key` is called `name` and the value is a `String` representing the name of this treasure. Here, the name is "Hairy Harry".
+
+The name is pretty self explanatory but the `imageURL` is where the actual image of Hairy Harry lives and where we can download it from within our app. That's perfect.
+
+We don't want to store every single image of these various treasures in our iOS application. Imagine if we had 10,000 images or even 100,000 user-generated treasures, no-one would want to keep the app on their iPhone. Here, we're storing all of the information (including the images) of these treasure objects in Firebase. 
+
+What about `treasureLocations`. What lives within that dictionary?
+
+![](http://i.imgur.com/Drvv0Q6.png?1)
+
+We can ignore the contents of this dictionary for now. What is important to take away from this right now is that the `key`'s here which look like a bunch of random numbers and letters match up with the `key`'s within the `treasureProfiles` dictionary. You might then ask, why have the locations and profile information of these treasure objects separate? How we're creating these treasure objects is something we will cover last here--but in working with GeoFire, we wanted to let it do its thing. Its thing being able to generate these values you see here (like 7zzzzzz) for the key g which can represent a specific lat & long on a map (which is awesome!). So we have a separate dictionary where the keys of these particular objects are unique where we can easily retrieve the name, image and location when we have a `key`. 
+
+So now when we head back to Xcode, how can make the connection here to this particular URL which has all of this great info regarding treasures with our app?
+
+*NOTE*: How did we get this info on firebase? That will be discussed shortly.
+
 
 
 <a href='https://learn.co/lessons/HowToFlatironGO' data-visibility='hidden'>View this lesson on Learn.co</a>
