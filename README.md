@@ -277,6 +277,37 @@ So now when we head back to Xcode, how can make the connection here to this part
 
 *NOTE*: How did we get this info on firebase? That will be discussed shortly.
 
+# Back to Xcode (maps stuff)
+
+Going back to our extension, lets add a `typealias` in there to make our lives easier.
+
+```swift
+// MARK: - Treasure Methods
+extension MapViewController {
+    
+    typealias ResponseDictionary = [String: AnyObject]
+    
+}
+```
+
+Now anytime we type out `ResponseDictionary`, it's the equivalent of typing out [`String`: `AnyObject`] which is a dictionary where the keys are `String`'s and the values are `AnyObject`. When dealing with the responses we will get back in our communications with Firebase, it takes this format - so we'll associate a word with it so that way we're not typing the same thing over and over again. We also get the benefit of Auto-Complete when typing out `ResponseDictionary` now.
+
+Lets finally add a function to this extension now. We will call this function `setupGeoQueryWithLocation(_:)` It will take in one argument called `location` of type `CLLocation`. It will also return back a `GFCircleQuery`.
+
+```swift
+private func setupGeoQueryWithLocation(location: CLLocation) -> GFCircleQuery {
+        let geofireRef = FIRDatabase.database().referenceWithPath(FIRReferencePath.treasureLocations)
+        let geoFire = GeoFire(firebaseRef: geofireRef)
+        let geoQuery = geoFire.queryAtLocation(location, withRadius: 10.0)
+        return geoQuery
+    }
+``` 
+
+In its implementation we're creating a constant named `geoFireRef`. That will equal (if you read that line of code) some path, but not just _any_ path. It will equal the location of the `treasureLocations` that we looked at earlier!
+
+That next line of code will create a new constant called `geoFire`. We assign it a value which is an instance of `Geofire`. We initialize our `Geofire` object by passing in our `geofireRef` object to it, we get back an instance of `GeoFire` which has reference to the URL where our treasure locations live.
+
+On the following line of code we are asking our `geoFire` object to create a query at the location that was passed into this function with a radius of 10.0. After we assign the return value of calling `queryAtLocation(_:withRadius:)` to a constant called `geoQuery`, we return `geoQuery` back to the caller of this function.
 
 
 <a href='https://learn.co/lessons/HowToFlatironGO' data-visibility='hidden'>View this lesson on Learn.co</a>
