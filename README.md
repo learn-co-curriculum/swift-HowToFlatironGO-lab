@@ -537,7 +537,37 @@ extension MapViewController: MGLMapViewDelegate {
 }
 ```
 
+# What happens when they tap a treasure icon on the map
 
+```swift
+// MARK: - Segue Method
+extension MapViewController {
+    
+    private func handleTapOfAnnotationView(annotationView: MGLAnnotationView) {
+        if let annotation = annotationView as? TreasureAnnotationView {
+            
+            // Providing a default treasure value to the annotations.treasure property if its nil (for w/e reason)
+            if annotation.treasure == nil {
+                annotation.treasure = Treasure(location: GPSLocation(latitude: 40.0, longitude: 40.0), name: "Charging Bull", imageURLString: Constants.bullImage)
+                annotation.treasure.makeImage() { [unowned self] success in
+                    self.performSegueWithIdentifier("TreasureSegue", sender: annotationView)
+                }
+            } else {
+                performSegueWithIdentifier("TreasureSegue", sender: annotationView)
+            }
+        }
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        guard segue.identifier == "TreasureSegue" else { return }
+        guard let destVC = segue.destinationViewController as? ViewController else { return }
+        
+        if let annotation = sender as? TreasureAnnotationView {
+            destVC.treasure = annotation.treasure
+        }
+    }
+}
+```
 
 
 
