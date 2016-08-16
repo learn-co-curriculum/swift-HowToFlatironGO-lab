@@ -476,8 +476,66 @@ override func viewDidLoad() {
     }
 ```
 
+# Being the Map View Delegate. Creating the treasure images on screen.
 
 
+
+```swift
+// MARK: - MapView Delegate Methods
+extension MapViewController: MGLMapViewDelegate {
+    
+    func mapView(mapView: MGLMapView, viewForAnnotation annotation: MGLAnnotation) -> MGLAnnotationView? {
+        
+        guard annotation is MGLPointAnnotation else { return nil }
+        
+        let reuseIdentifier = String(annotation.coordinate.longitude)
+        
+        var annotationView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseIdentifier) as? TreasureAnnotationView
+        
+        if annotationView == nil {
+            annotationView = TreasureAnnotationView(reuseIdentifier: reuseIdentifier)
+            annotationView!.frame = CGRectMake(0, 0, 100, 100)
+            annotationView!.scalesWithViewingDistance = false
+            annotationView!.enabled = true
+            
+            let imageView = UIImageView(image: UIImage(named: "treasure"))
+            imageView.contentMode = .ScaleAspectFit
+            imageView.translatesAutoresizingMaskIntoConstraints = false
+            
+            annotationView!.addSubview(imageView)
+            imageView.topAnchor.constraintEqualToAnchor(annotationView?.topAnchor).active = true
+            imageView.bottomAnchor.constraintEqualToAnchor(annotationView?.bottomAnchor).active = true
+            imageView.leftAnchor.constraintEqualToAnchor(annotationView?.leftAnchor).active = true
+            imageView.rightAnchor.constraintEqualToAnchor(annotationView?.rightAnchor).active = true
+        }
+        
+        let key = String(annotation.coordinate.latitude) + String(annotation.coordinate.longitude)
+        if let associatedTreasure = annotations[key] {
+            annotationView?.treasure = associatedTreasure
+        }
+        
+        return annotationView
+    }
+    
+    func mapView(mapView: MGLMapView, didSelectAnnotationView annotationView: MGLAnnotationView) {
+        handleTapOfAnnotationView(annotationView)
+    }
+    
+    func mapView(mapView: MGLMapView, didSelectAnnotation annotation: MGLAnnotation) {
+        // TODO: User is in radius of tapped treasure.
+    }
+    
+    func mapView(mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
+        return true
+    }
+    
+    func mapViewDidFinishLoadingMap(mapView: MGLMapView) {
+        let camera = MGLMapCamera(lookingAtCenterCoordinate: mapView.centerCoordinate, fromDistance: 200, pitch: 60, heading: 180)
+        mapView.setCamera(camera, withDuration: 2, animationTimingFunction: CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
+    }
+    
+}
+```
 
 
 
