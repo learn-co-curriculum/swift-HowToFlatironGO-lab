@@ -358,8 +358,105 @@ Scrolling back down to your implementation of `saveTreasureLocally(response:key:
 
 `makeImage` is then called on our `treasure` instance here. We had implemented this function earlier--for now I will ask that you type it in, but we will discuss this further when we utilize it.
 
+Lets now create a function which will communicate with Firebase and retrieve the profile information. The profile information of a treasure item consists of its name and imageURL. In order to make this connection to firebase we will need to the `key` of the treasure item. This function will be called `getTreasureProfileFor(_:completion:)` with no return type. It's first argument will be called `key` of type `String`, the second argument will be called `completion` of type `(Bool) -> ()`. This is the signature of a function and functions can be types as well! The type of this function is `(Bool) -> ()` which means it has one argument of type `Bool` and it returns nothing. So whoever calls on this `getTreasureProfileFor(_:completion:)` function is required to provide it with two arguments (and expect nothing in return). Those two arguments are a `String` and a function that takes in a `Bool` as an argument and returns nothing.
 
 
+```swift
+private func getTreasureProfileFor(key: String, completion: (Bool) -> ()) {
+        let profileRef = FIRDatabase.database().referenceWithPath(FIRReferencePath.treasureProfiles + "/" + key)
+        
+        profileRef.observeEventType(FIRDataEventType.Value, withBlock: { [unowned self] snapshot in
+            guard let profile = snapshot.value as? ResponseDictionary,
+                treasureLocation = self.treasureLocations[snapshot.key]
+                else { print("Unable to produce snapshot value or key"); completion(false); return }
+            
+            self.saveTreasureLocally(withResponse: profile, key: snapshot.key, andLocation: treasureLocation)
+            completion(true)
+            })
+    }
+```
+
+Lets step through the implementation. When this function is called, we have two things handed to us - a `key` which is of type `String` and a `completion` constant which is of type `(Bool) -> ()`, it's a function we can call on (whenever we want) within the scope of this function.
+
+First things first, we're creating our connection to firebase. 
+
+```swift
+let profileRef = FIRDatabase.database().referenceWithPath(FIRReferencePath.treasureProfiles + "/" + key)
+```
+
+This constant, called `profileRef` is a direct connection going through the inter-webs to Firebase locating our exact treasure (the provided `key`). With this constant, we're now able to call on a specific method available to the `FIRDatabaseReference` type which is the what the type of `profileRef` is.
+
+Calling `observeEventType` on this constant, we provide it with a function where one of the arguments is `snapshot` of type `FIRDataSnapshot`. This argument, provided to us when `observeEventType` decides to call on this provided function contains the information we're looking for. 
+
+Scrolling back up to above the `viewDidLoad()` function, we need to add another property:
+
+```swift
+var treasureLocations: [String: GPSLocation] = [:]
+```
+
+We will be adding items to this later. It will be a place that stores our loctations where the Keys to this dictionary will be the `key` `String` associated with the treasure and the value will be their location as a `GPSLocation` coordinate. The `GPSLocation` struct is a type we made within `Treasure.swift` file.
+
+At this point, we would have already made the query up to firebase, making the request for treasures that fall within a certain radius and have stored them in this `treasureLocations` dictionary. So here, we have the `key` to our treasure-- we're going back up to firebase getting back a snapshot that now contains the name and imageURL within our `profile` constant. We're passing along this info to the `saveTreasureLocally` function we created earlier which will use this info to create a `Treasure` object and store it locally. After we do that, we will call on the `completion` argument handed to us in this function, passing in the value `true` to let the person who called on this function know that we are done!
+
+This piece of code handed over to the `observeEventType` function on `profileRef` is happening asynchronously. It could take 2 seconds, it could take 5 min. but it's doing its thing as the rest of our app continues to run. It's not blocking the main thread, it's not holding anything else up.
+
+Lets implement the final piece of this puzzle. We want to create a function that will do all of these various parts in one (to make our life very easy). We will call the function `getTreasuresFor(_:completion:)`. It will take in two arguments. The first argument is called `location` of type `CLLocation` and the second argument is called `completion` of type `(Bool) -> ()`. It will return nothing.
+
+We call on our `setupGeoQueryWithLocation()` function, passing in the `location` argument we receive. This sets up our `geoQuery` object which allows us to communicate with firebase. We have a query object created that's able to retrieve the `key`'s of treasures that fall within a certain radius. So the `observeEventType` function we call on the `geoQuery` object is able to provide us with a `key` and `location` which we utilize to step through the various functions we created above to store these treasures locally on the phone that fall within a certain radius of the users current location. Like I stated earlier, this block of code provided to the `observeEventType` function here gets called repeatedly within the implementation of the `observeEventType` function when its able to located a `key` and `location` that falls within radius--it doesn't give us all the info within one chunk, we get it one at a time.
+
+
+```swift
+private func getTreasuresFor(location: CLLocation, completion: (Bool) -> ()) {
+        let geoQuery = setupGeoQueryWithLocation(location)
+    
+        geoQuery.observeEventType(.KeyEntered) { [unowned self] key, location in
+            guard let geoKey = key,
+                geoLocation = location
+                else { print("No Key and/or No Location"); completion(false); return }
+            
+            let treasureLocation = self.generateLatAndLongFromLocation(geoLocation)
+            
+            self.treasureLocations[geoKey] = (GPSLocation(latitude: treasureLocation.lat, longitude: treasureLocation.long))
+            
+            self.getTreasureProfileFor(geoKey) { [unowned self] result in
+                if result { self.createAnnotations() }
+                completion(result)
+            }
+        }
+    }
+```
+
+Within our implementation, we're calling on a function `createAnnotations()` which is what places our treasure annotation on the map (for our user to be able to interact with).
+
+```swift
+// MARK: - Annotation Methods
+extension MapViewController {
+    
+    private func createAnnotations() {
+        guard let (_, treasure) = treasures.last else { print("No last treasure"); return }
+        generateAnnotationWithTreasure(treasure)
+    }
+    
+    private func generateAnnotationWithTreasure(treasure: Treasure) {
+        let newAnnotation = MGLPointAnnotation()
+        let lat = Double(treasure.location.latitude)
+        let long = Double(treasure.location.longitude)
+        newAnnotation.coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+        newAnnotation.title = treasure.name
+        mapView.addAnnotation(newAnnotation)
+        
+        let key = String(newAnnotation.coordinate.latitude) + String(newAnnotation.coordinate.longitude)
+        annotations[key] = treasure
+    }
+    
+}
+```
+
+We're utilizing another instance property here which should be created above the `viewDidLoad() ` function.
+
+```swift
+var annotations: [String: Treasure] = [:]
+```
 
 
 
