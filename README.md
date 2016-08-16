@@ -458,6 +458,23 @@ We're utilizing another instance property here which should be created above the
 var annotations: [String: Treasure] = [:]
 ```
 
+We want to know add this new function we made to our `viewDidLoad()` function.
+
+```swift
+getTreasuresFor(userStartLocation) { _ in }
+```
+
+Our `viewDidLoad()` should now look like this:
+
+```swift
+override func viewDidLoad() {
+        super.viewDidLoad()
+        setupMapView()
+        setupCurrentLocation()
+        setCenterCoordinateOnMapView()
+        getTreasuresFor(userStartLocation) { _ in }
+    }
+```
 
 
 
