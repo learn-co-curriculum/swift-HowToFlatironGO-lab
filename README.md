@@ -577,20 +577,144 @@ extension MapViewController {
 
 ![OtherBear](https://i.imgur.com/wKJBOh1.png)
 
-* When the `treasure` annotation is tapped on the Map, we are presenting a new `UIViewController` - the `ViewController.swift` file. 
-* We know based upon what annotation was tapped, what `treasure` object should be transferred forward to display in our camera preview.
-* So.. now that we know what `treasure` to display, what steps do we need to take to get this `image` displayed on screen?
-* In my `ViewController`, when the `view` appears,  I'm calling on the following function,`setupMainComponents()`. Following is a walkthrough of the implementation of these various methods. Feel free to follow along with the Xcode project open.
+We are now in our `ViewController.swift` file. How did we get here? When a treasure icon is tapped from the `MapViewController`, we segue over to this `ViewController`. In the `prepareForSegue(_:sender:)` method on the `MapViewController`, we're able to get a hold of the instance of the `ViewController` through the `segue`'s `destinationViewController` property. This segue connection was made in our `Main.storyboard` file. In that `prepareForSegue(_:sender:)` function on the `MapViewController`, we assigned a value to the following instance property on our `ViewController` (which is the `.destinationViewController`):
 
 ```swift
-private func setupMainComponents() {
-    setupCaptureCameraDevice()
-    setupPreviewLayer()
-    setupMotionManager()
-    setupGestureRecognizer()
-    setupDismissButton()
+var treasure: Treasure!
+```
+
+That way, within our `viewDidLoad()` method on the `ViewController`, we have full access to a `treasure` object. The one that was tapped on the `MapViewController`. With this `treasure` object, we can go through with the necessary steps to displaying on screen.
+
+Recap: Our `ViewController` has an instance property called `treasure` of type `Treasure!`. It's an implicitly unwrapped optional, that way it has a default value of `nil` when our `ViewController` is loaded into memory because we don't have access to the `UIViewController`'s `init` function and we can't add a stored property to a class on a `UIViewController` without assigning it a default value. By making it an implicitly unwrapped optional, it has a default value of `nil`. We assign it a value in the `prepareForSegue(_:sender:)` method on our instance of `MapViewController` through the `segue` parameter which is of type `UIStoryboardSegue`. The `segue` object knows where we're going (because we set this up within our `Main.storyboard` file. Through that `segue` object, we get a hold of the instance of our `ViewController`. At that moment, we assign a value to the `treasure` instance property. What value? Well, it has to be of type `Treasure`--it's the `Treasure` instance that was tapped on the map. That's the value we assign to this instance property.
+
+# Brief Overview
+  
+* `viewDidLoad()` - Here the view is loaded into memory, we are just changing the `backgroundColor` property on our `view` instance.
+* `viewWillAppear(_:)` - The view is about to appear on screen so we're calling on a method called `setupMainComponents()` which will go through all the necessary steps to getting this AR component to work.
+* `setupMainComponents()` - This function calls on the following functions to get everything setup:
+	* `setupCaptureCameraDevice()` - Setting up the camera device to put the user in a mode as if they're going to take a picture.
+	* `setupPreviewLayer()` - Setting up our image to be displayed on screen.
+	* `setupMotionManager()` - Setting up an object that allows us to listen to changes in the device when the user moves the iPhone around.
+	* `setupGestureRecognizer()` - Setting up an object that listens for any tap on the screen. We want to see if a user was able to tap the image on screen.
+	* `setupDismissButton()` - Setting up a `UIButon` to appear on screen after a user is able to tap the image (this will allow the user to go back to the map).
+	
+
+```swift
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor.blackColor()
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        setupMainComponents()
+    }
+    
+    private func setupMainComponents() {
+        setupCaptureCameraDevice()
+        setupPreviewLayer()
+        setupMotionManager()
+        setupGestureRecognizer()
+        setupDismissButton()
+    }
+```
+
+Without discussing exactly what these various instance properties do yet, I would ask that you include them above the `viewDidLoad()` for now as they will be used throughout these various methods.
+
+```swift
+    let captureSession = AVCaptureSession()
+    let motionManager = CMMotionManager()
+    var previewLayer: AVCaptureVideoPreviewLayer!
+    var treasure: Treasure!
+    var foundImageView: UIImageView!
+    var dismissButton: UIButton!
+    
+    var quaternionX: Double = 0.0 {
+        didSet {
+            if !foundTreasure { treasure.item.center.y = (CGFloat(quaternionX) * view.bounds.size.width - 180) * 4.0 }
+        }
+    }
+    
+    var quaternionY: Double = 0.0 {
+        didSet {
+            if !foundTreasure { treasure.item.center.x = (CGFloat(quaternionY) * view.bounds.size.height + 100) * 4.0 }
+        }
+    }
+    
+    var foundTreasure = false
+```
+
+# setupCaptureCameraDevice()
+
+What we will be creating:
+
+```swift
+// MARK: - AVFoundation Methods
+extension ViewController {
+    
+    private func setupCaptureCameraDevice() {
+        let cameraDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
+        let cameraDeviceInput = try? AVCaptureDeviceInput(device: cameraDevice)
+        guard let camera = cameraDeviceInput where captureSession.canAddInput(camera) else { return }
+        captureSession.addInput(camera)
+        captureSession.startRunning()
+    }
+        
 }
 ```
+
+**1** - Create an extension on the `ViewController`, adding a `// MARK: - ` above the extension labeled AVFoundation Methods
+  
+**2** - Within this extension, create a function named `setupCaptureCameraDevice()`. This method will take in no arguments and return no values. In our implementation we want to do the following:  
+* Create a constant called `cameraDevice` and assign it the value `AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)`. This `defaultDeviceWithMediaType(_:)` type method on the `AVCaptureDevice` type, when passing in the `AVMediaTypeVideo` `String` constant, will return back to us the built in camera that is primarily used for capture and recording. We are storing this value in our `cameraDevice` constant.   
+
+* Create a constant called `cameraDeviceInput` and assign it the value `try? AVCaptureDeviceInput(device: cameraDevice)`. The initializer we're calling on `AVCaptureDeviceInput` can fail, which is why we use the `try?` keyword here. We're not handling any error this might throw (something we should look to do if we want to release this app). This `init` takes in an argument of type `AVCaptureDevice` which is the same type of `cameraDevice`, the constant we just made. This initializer will create an instance of `AVCaptureDeviceInput` which can be used to capture data from an `AVCaptureDevice` (which is our constant `cameraDevice)` in an `AVCaptureSession` (which is our `captureSession` instance property which we haven't talked about yet). 
+
+* Because our `cameraDeviceInput` might be nil in that we've tried initializing this object calling on an `init` function which can fail, we need to check to see that `cameraDeviceInput` is not nil. We do that here by using the `guard` statement. Not only do we want to make sure the `cameraDeviceInput` is not nil, we want to make sure we can add it as input to our `captureSession`. There's a method on our `captureSession` instance property which is of type `AVCaptureSession` which allows us to check that we can indeed add this `cameraDeviceInput`  as input. If `cameraDeviceInput` is not nil, we store its value in our local constant named `camera` , check to see that we can add it as input then carryon.
+
+* Next we want to call on the `addInput(_:)` method available to instances of `AVCaptureSession`. So we call on the `addInput(_:)` method on our `captureSession` instance property passing in the `camera` instance.
+
+* Lastly, we call `startRunning()` on our `captureSession` instance property. This begins the flow of data from inputs to outputs connected to our `AvCaptureSession` instance. We are not handling any errors that might come of this `startRunning()` method which is something we should look into if we were to release this app.
+
+
+# setupPreviewLayer()
+
+What we will be creating:
+
+```swift
+// MARK: - AVFoundation Methods
+extension ViewController {
+    
+    private func setupCaptureCameraDevice() {
+        let cameraDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
+        let cameraDeviceInput = try? AVCaptureDeviceInput(device: cameraDevice)
+        guard let camera = cameraDeviceInput where captureSession.canAddInput(camera) else { return }
+        captureSession.addInput(camera)
+        captureSession.startRunning()
+    }
+    
+    private func setupPreviewLayer() {
+        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        previewLayer.frame = view.bounds
+        
+        if treasure.image != nil {
+            let height = treasure.image!.size.height
+            let width = treasure.image!.size.height
+            treasure.item.bounds = CGRectMake(100.0, 100.0, width, height)
+            treasure.item.position = CGPointMake(view.bounds.size.height / 2, view.bounds.size.width / 2)
+            previewLayer.addSublayer(treasure.item)
+            view.layer.addSublayer(previewLayer)
+        }
+    }
+    
+}
+```
+
+We're not creating a new extension here. We're adding to the one we had created in the previous step. We're creating a new method we're adding below the `setupCaptureCameraDevice` method.
+
+**1** - Create a function named `setupPreviewLayer()` which takes in no arguments and returns no values. In our implementation we want to do the following:
+
+* 
 
 ### **1** - Setup our AVCaptureSession & tell it to start running
 
