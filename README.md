@@ -26,7 +26,7 @@ The various components of this app consist of using:
 ![](https://i.imgur.com/wKJBOh1.png) 
 
 
-* [Augmented Reality](#augmented-reality-portion!)
+* [Augmented Reality](#augmented-reality)
 
 
 
@@ -463,7 +463,7 @@ Through that annotation we're able to determine the `treasure` object associated
 
 ---
 
-# Augmented Reality Portion!
+# Augmented Reality
 
 
 ![OtherBear](https://i.imgur.com/jWZDeRy.pngF)
