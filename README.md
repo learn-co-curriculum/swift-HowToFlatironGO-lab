@@ -21,7 +21,11 @@ The various components of this app consist of using:
 # Contents
 * [Firebase](#firebase) 
 * [Map](#map)
+* [Map, part 2](#map-(part-2))
+* [Map & Treasures](#back-to-xcode-(maps-stuff))
 * [Users Current Location](#users-current-location)
+* [Map View Delegate](#being-the-map-view-delegate.-creating-the-treasure-images-on-screen.)
+
 
 
 
