@@ -21,7 +21,7 @@ The various components of this app consist of using:
 # Contents
 * [Firebase](#firebase) 
 * [Map](#map)
-* [Users Current Location](#users Current Location)
+* [Users Current Location](#users-current-location)
 
 
 
