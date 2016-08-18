@@ -17,7 +17,12 @@ The various components of this app consist of using:
 
 
 # Quick Note:
-If you prefer to jump right to the Augmented Reality Portion, scroll down until you see the heading "Augmented Reality Portion", or click [here](#Augmented Reality Portion!).
+
+# Contents
+     - [Firebase](#firebase) 
+
+
+If you prefer to jump right to the Augmented Reality Portion, scroll down until you see the heading "Augmented Reality Portion", or click [here](#map).
 
 
 ---
