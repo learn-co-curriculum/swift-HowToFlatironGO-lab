@@ -21,6 +21,8 @@ The various components of this app consist of using:
 # Contents
 * [Firebase](#firebase) 
 * [Map](#map)
+* [Users Current Location](#users Current Location)
+
 
 
 If you prefer to jump right to the Augmented Reality Portion, scroll down until you see the heading "Augmented Reality Portion", or click [here](#map).
