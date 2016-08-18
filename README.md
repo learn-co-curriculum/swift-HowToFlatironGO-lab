@@ -2,8 +2,10 @@
 
 ![](https://i.imgur.com/iH0HDpt.png)
 
-![](https://i.imgur.com/jWZDeRy.png) 
- 
+![](https://i.imgur.com/wKJBOh1.png) 
+
+
+
 
 The various components of this app consist of using:
 * [AVFoundation](https://developer.apple.com/av-foundation/)
@@ -13,6 +15,12 @@ The various components of this app consist of using:
 * [GeoFire](https://github.com/firebase/geofire-objc)
 * [Mapbox](https://www.mapbox.com/ios-sdk/)
 
+
+# Quick Note:
+If you prefer to jump right to the Augmented Reality Portion, scroll down until you see the heading "Augmented Reality Portion", or click [here](#Augmented Reality Portion).
+
+
+---
 
 # Firebase 
 Setup a [Firebase](https://www.firebase.com) account. We will be utilizing the database & storage that a firebase account can provide. Get your XCode project up and running with firebase.
@@ -178,70 +186,12 @@ Stepping through this, it will first call on `super.viewDidLoad()` then call on 
 
 Create a new `Treasure.swift` file with the following contents.
 
+[Treasure.swift](https://github.com/learn-co-curriculum/FlatironGO/blob/master/FlatironGo/Treasure.swift)
+
 An instance of `Treasure` is made up of various properties and methods. It has a `location`, `name` and `item` which are most important. The `item` instance property will come into use later when we get to the Augmented Reality portion. The `Treasure` instance will be able to download its own image as well as create the `item` which is of type `CALayer` when it's required later. Any logic or functionality associated with a treasure object is done here in our implementation of the `Treasure` class to keeps things very simple for us.
 
-```swift
-import Foundation
-import UIKit
-import CoreLocation
 
-final class Treasure: CustomStringConvertible {
-    let location: GPSLocation
-    var name: String
-    var item = CALayer()
-    var description: String { return makeDescription() }
-    var image: UIImage?
-    let imageURL: String
-    var downloadingImage: Bool = false
-    
-    init(location: GPSLocation, name: String, imageURLString: String) {
-        self.location = location
-        self.name = name
-        imageURL = imageURLString
-    }
-    
-    func makeDescription() -> String {
-        return "\(location.latitude), \(location.longitude)"
-    }
-    
-    func createItem() {
-        guard let image = image else {print("fix this later"); return }
-        item.contents = image.CGImage
-    }
-    
-    func makeImage(withCompletion completion: (Bool) -> ()) {
-        guard downloadingImage == false else { print("Already downloading image."); return }
-        guard image == nil else { print("We already have image"); return }
-        guard let imageURL = NSURL(string: imageURL) else { print("Couldnt convert URL"); completion(false); return }
-        
-        downloadingImage = true
-        
-        let session = NSURLSession.sharedSession()
-        
-        session.dataTaskWithURL(imageURL) { [unowned self] data, response, error in
-            dispatch_async(dispatch_get_main_queue(),{
-                guard let data = data else { print("data came back nil"); completion(false); return }
-                if let image = UIImage(data: data) { self.image = image }
-                self.downloadingImage = false
-                self.createItem()
-                completion(true)
-            })
-            }.resume()
-        
-    }
-}
-
-struct GPSLocation {
-    var latitude: Float
-    var longitude: Float
-}
-
-struct TreasureLocation {
-    var location: CLLocation
-}
-```
-
-# Map (II)
+# Map (Part 2)
 
 Head back to the `MapViewController.swift` file. Lets create another extension, labeling it as "Treasure Methods"
 
@@ -461,7 +411,7 @@ We're utilizing another instance property here which should be created above the
 var annotations: [String: Treasure] = [:]
 ```
 
-We want to know add this new function we made to our `viewDidLoad()` function.
+We want to now add this new function we made to our `viewDidLoad()` function.
 
 ```swift
 getTreasuresFor(userStartLocation) { _ in }
@@ -481,101 +431,25 @@ override func viewDidLoad() {
 
 # Being the Map View Delegate. Creating the treasure images on screen.
 
+Check out the extension on `MapViewController` where we adopt the `MGLMapViewDelegate` protocol. Above this extension, we marked it as "MapView Delegate Methods":
 
+[MapViewController.swift](https://github.com/learn-co-curriculum/FlatironGO/blob/master/FlatironGo/MapViewController.swift)
 
-```swift
-// MARK: - MapView Delegate Methods
-extension MapViewController: MGLMapViewDelegate {
-    
-    func mapView(mapView: MGLMapView, viewForAnnotation annotation: MGLAnnotation) -> MGLAnnotationView? {
-        
-        guard annotation is MGLPointAnnotation else { return nil }
-        
-        let reuseIdentifier = String(annotation.coordinate.longitude)
-        
-        var annotationView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseIdentifier) as? TreasureAnnotationView
-        
-        if annotationView == nil {
-            annotationView = TreasureAnnotationView(reuseIdentifier: reuseIdentifier)
-            annotationView!.frame = CGRectMake(0, 0, 100, 100)
-            annotationView!.scalesWithViewingDistance = false
-            annotationView!.enabled = true
-            
-            let imageView = UIImageView(image: UIImage(named: "treasure"))
-            imageView.contentMode = .ScaleAspectFit
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            
-            annotationView!.addSubview(imageView)
-            imageView.topAnchor.constraintEqualToAnchor(annotationView?.topAnchor).active = true
-            imageView.bottomAnchor.constraintEqualToAnchor(annotationView?.bottomAnchor).active = true
-            imageView.leftAnchor.constraintEqualToAnchor(annotationView?.leftAnchor).active = true
-            imageView.rightAnchor.constraintEqualToAnchor(annotationView?.rightAnchor).active = true
-        }
-        
-        let key = String(annotation.coordinate.latitude) + String(annotation.coordinate.longitude)
-        if let associatedTreasure = annotations[key] {
-            annotationView?.treasure = associatedTreasure
-        }
-        
-        return annotationView
-    }
-    
-    func mapView(mapView: MGLMapView, didSelectAnnotationView annotationView: MGLAnnotationView) {
-        handleTapOfAnnotationView(annotationView)
-    }
-    
-    func mapView(mapView: MGLMapView, didSelectAnnotation annotation: MGLAnnotation) {
-        // TODO: User is in radius of tapped treasure.
-    }
-    
-    func mapView(mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
-        return true
-    }
-    
-    func mapViewDidFinishLoadingMap(mapView: MGLMapView) {
-        let camera = MGLMapCamera(lookingAtCenterCoordinate: mapView.centerCoordinate, fromDistance: 200, pitch: 60, heading: 180)
-        mapView.setCamera(camera, withDuration: 2, animationTimingFunction: CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut))
-    }
-    
-}
-```
 
 # What happens when they tap a treasure icon on the map
 
-```swift
-// MARK: - Segue Method
-extension MapViewController {
-    
-    private func handleTapOfAnnotationView(annotationView: MGLAnnotationView) {
-        if let annotation = annotationView as? TreasureAnnotationView {
-            
-            // Providing a default treasure value to the annotations.treasure property if its nil (for w/e reason)
-            if annotation.treasure == nil {
-                annotation.treasure = Treasure(location: GPSLocation(latitude: 40.0, longitude: 40.0), name: "Charging Bull", imageURLString: Constants.bullImage)
-                annotation.treasure.makeImage() { [unowned self] success in
-                    self.performSegueWithIdentifier("TreasureSegue", sender: annotationView)
-                }
-            } else {
-                performSegueWithIdentifier("TreasureSegue", sender: annotationView)
-            }
-        }
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        guard segue.identifier == "TreasureSegue" else { return }
-        guard let destVC = segue.destinationViewController as? ViewController else { return }
-        
-        if let annotation = sender as? TreasureAnnotationView {
-            destVC.treasure = annotation.treasure
-        }
-    }
-}
-```
+Check out the extension on `MapViewController` marked "Segue Method". Here we implement the functionality to handle the tap of an annotation view and the segue we perform based upon this. The `TreasureAnnotationView` class has an instance property called `treasure` of type `Treasure`.
+
+[TreasureAnnotationView.swift](https://github.com/learn-co-curriculum/FlatironGO/blob/master/FlatironGo/AnnotationView.swift)
+
+Through that annotation we're able to determine the `treasure` object associated with it. If it's `nil`, then there was a problem in our setting up of this annotation so I'm creating some default value to assign to it which is the Charging Bull. This is not ideal for an app ready for the app store, so we should look to see why in fact the `treasure` might be nil and handle this problem at that point. Here, I'm assigning it a default value if it's `nil` for demo purposes. If it's not `nil` , well then everything is cool! Either way, we're performing a `segue` over to the `ViewController` handing over the `Treasure` instance which was tapped.
+
+---
 
 # Augmented Reality Portion
 
 
-![OtherBear](https://i.imgur.com/wKJBOh1.png)
+![OtherBear](https://i.imgur.com/jWZDeRy.pngF)
 
 We are now in our `ViewController.swift` file. How did we get here? When a treasure icon is tapped from the `MapViewController`, we segue over to this `ViewController`. In the `prepareForSegue(_:sender:)` method on the `MapViewController`, we're able to get a hold of the instance of the `ViewController` through the `segue`'s `destinationViewController` property. This segue connection was made in our `Main.storyboard` file. In that `prepareForSegue(_:sender:)` function on the `MapViewController`, we assigned a value to the following instance property on our `ViewController` (which is the `.destinationViewController`):
 
@@ -751,176 +625,168 @@ That conversion is happening in this function within `Treasure`'s implementation
 This is why we're adding `treasure.item` to the `previewLayer` in the function `addSublayer(_:)`. After we do that, we need to now add the `previewLayer` object to our `view`'s `layer` property in the `addSublayer(_:)` method.
 
 
+# setupMotionManager()
 
-
-
-### **1** - Setup our AVCaptureSession & tell it to start running
-
-The `captureSession` used here is initialized in the declaration of the property on the `ViewController`
+What we will be creating:
 
 ```swift
-let captureSession = AVCaptureSession()
-```
-
-The `cameraDeviceInput` is an instance of `AVCaptureDeviceInput`. Checking first that we can add the `cameraDeviceInput` to the session we then move forward by adding the `cameraDeviceInput` to the `captureSession`. That's a mouth full, and if you want to know more of what's going on here - I recommend option clicking the various types of these objects and reading through the documentation. 
-
-In short, this setups our camera and tell it to begin running!
-```swift
-let cameraDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
-let cameraDeviceInput = try? AVCaptureDeviceInput(device: cameraDevice)
-guard let camera = cameraDeviceInput where captureSession.canAddInput(camera) else { return }
-captureSession.addInput(cameraDeviceInput)
-captureSession.startRunning() 
-```
----
-
-### **2** - Setup the Preview Layer
-
-The `previewLayer` is a property on the `ViewController`. It's an instance of `AVCaptureVideoPreviewLayer`. 
-
-![PreviewLayer](https://i.imgur.com/0k76NAV.png)
-
-We are first initializing it, then settings it's frame to equal the view's bounds (it will fill the entire screen). If the treasure object we were handed from the previous MapViewController's image is not nil, then we will move forward!
-
-The item property on `treasure` is of type `CALayer`. See the `Treasure.swift` file for how this is created. We position it so it's within view when the preview layer launches.
-
-We then add this `previewLayer` to the `view`.
-
-We should now see our treasure on screen!
-
-
-```swift
-previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-previewLayer.frame = view.bounds
+// MARK: - Detect Movements
+extension ViewController {
+    
+    private func setupMotionManager() {
         
-if treasure.image != nil {
-    let height = treasure.image!.size.height
-    let width = treasure.image!.size.height
-    treasure.item.bounds = CGRectMake(100.0, 100.0, width, height)
-    treasure.item.position = CGPointMake(view.bounds.size.height / 2, view.bounds.size.width / 2)
-    previewLayer.addSublayer(treasure.item)
-    view.layer.addSublayer(previewLayer)
-}
- ```
----
-
-
-### **3** - Setup the Motion Manager
-
-The `motionManager` is a property on the `ViewController` which is initialized within the declaration of the property like so:
-```swift
-let motionManager = CMMotionManager()
-```
-
-In the implementation of the block of code passed into the `startDeviceMotionUpdatesToQueue` function call, we have a `motion` object we can work with of type `CMDeviceMotion`.
-
-```swift
-if motionManager.deviceMotionAvailable && motionManager.accelerometerAvailable {
-      motionManager.deviceMotionUpdateInterval = 2.0 / 60.0
-      motionManager.startDeviceMotionUpdatesToQueue(NSOperationQueue.currentQueue()!) { [unowned self] motion, error in
+        if motionManager.deviceMotionAvailable && motionManager.accelerometerAvailable {
+            motionManager.deviceMotionUpdateInterval = 2.0 / 60.0
+            motionManager.startDeviceMotionUpdatesToQueue(NSOperationQueue.currentQueue()!) { [unowned self] motion, error in
                 
-          if error != nil { print("wtf. \(error)"); return }
-          guard let motion = motion else { print("Couldn't unwrap motion"); return }
+                if error != nil { print("wtf. \(error)"); return }
+                guard let motion = motion else { print("Couldn't unwrap motion"); return }
                 
-          self.quaternionX = motion.attitude.quaternion.x
-          self.quaternionY = motion.attitude.quaternion.y
-     }
-}
-```
-
-![motion](http://i.imgur.com/n25qC0B.png)
-
-This is getting called continuously as the iPhone is moving and there are *MANY* properties on this object to take advantage of. For now, we're utilizing the `quaternion.x` and `quaternion.y` values to update our `quaternionX` and `quaternionY` properties on our `ViewController`. 
-
-This is being done, because we have `didSet` observers on theses properties which will in turn update our `treasure` object on screen (to make it appear as if it's moving with you in real time).
-
-Here is what those `disSet` observers look like:
-
-```swift
-var quaternionX: Double = 0.0 {
-    didSet {
-        if !foundTreasure { treasure.item.center.y = (CGFloat(quaternionX) * view.bounds.size.width - 180) * 4.0 }
-     }
-}
-
-var quaternionY: Double = 0.0 {
-    didSet {
-        if !foundTreasure { treasure.item.center.x = (CGFloat(quaternionY) * view.bounds.size.height + 100) * 4.0 }
-     }
-}
-```
-
----
-
-### **4** - Setting up our Gesture Recognizer
-
-We want to know when a user taps on the screen.. simple enough!
-
-```swift
-let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped))
-gestureRecognizer.cancelsTouchesInView = false
-view.addGestureRecognizer(gestureRecognizer)
-```
-When a tap comes in, the `viewTapped()` method is called. One of the arguments to this method calld `gesture` is of type `UITapGestureRecognizer`. Through this object, we are able to tell where the tap occurred within the `view` and check it against where the `treasure` object is to see if their tap is within range of where the item is.
-
-```swift
-func viewTapped(gesture: UITapGestureRecognizer) {
- 	  let location = gesture.locationInView(view)
-      // See the Xcode project for how this was implemented 
-}
-```
-
-Below is the implementation of the various methods called when a tap occurs to check to see that it's within range of where our `treasure` object currently lives on screen.
-
-```swift
-func viewTapped(gesture: UITapGestureRecognizer) {
-    let location = gesture.locationInView(view)
-        
-    let topLeftX = Int(treasure.item.origin.x)
-    let topRightX = topLeftX + Int(treasure.item.width)
-    let topLeftY = Int(treasure.item.origin.y)
-    let bottomLeftY = topLeftY + Int(treasure.item.height)
-        
-    guard topLeftX < topRightX && topLeftX < bottomLeftY else { return }
-        
-    let xRange = topLeftX...topRightX
-    let yRange = topLeftY...bottomLeftY
-         
-    checkForRange(xRange, yRange, withLocation: location)
-}
-```
-
-```swift
-private func checkForRange(xRange: Range<Int>, _ yRange: Range<Int>, withLocation location: CGPoint) {
-    guard foundTreasure == false else { return }
-        
-    let tapIsInRange = xRange.contains(Int(location.x)) && yRange.contains(Int(location.y))
-        
-    if tapIsInRange {
-            
-        foundTreasure = true
-        motionManager.stopDeviceMotionUpdates()
-        captureSession.stopRunning()
-            
-        treasure.item.springToMiddle(withDuration: 1.5, damping: 9, inView: view)
-        treasure.item.centerInView(view)
-            
-        previewLayer.fadeOutWithDuration(1.0)
-            
-        animateInTreasure()
-        animateInDismissButton()
-        displayNameOfTreasure()
-        displayDiscoverLabel()
-            
+                self.quaternionX = motion.attitude.quaternion.x
+                self.quaternionY = motion.attitude.quaternion.y
+            }
+        }
     }
 }
 ```
 
----
+**1** - Create another extension on the `ViewController` making it with a comment like above.
 
-Check out the Xcode project to see how the spring animations were created after tapping the treasure object on screen.
+**2** - Within that extension, lets create method called `setupMotionManager` which takes in no arguments and returns no values.
+
+Looking above our `viewDidLoad()` function, you will see that I asked you to copy/paste in this piece of code:
+
+```swift
+let motionManager = CMMotionManager()
+```
+
+This instance property called `motionManager` is assigned a value. The value being an instance of `CMMotionManager`. We're calling on the default initializer on `CMMotionManager` here which will assign a default value to the `motionManager` instance property.
+
+This `CMMotionManager` class will allow us to detect movements within our device. This is a very rich class:
+
+![](https://media.giphy.com/media/h0MTqLyvgG0Ss/giphy.gif)
+
+But we're not going to be utilizing all of it's functionality here.
+
+Within our `setupMotionManager()` method, before we start setting any properties on our `motionManager` object, we want to make sure that we're able to do so with the following line of code:
+
+```swift
+        if motionManager.deviceMotionAvailable && motionManager.accelerometerAvailable {
+        
+        }
+```
+
+If the device motion and accelerometer is available, we will then enter this if statement and begin to setup our `motionManager`.
+
+```swift
+        if motionManager.deviceMotionAvailable && motionManager.accelerometerAvailable {
+            motionManager.deviceMotionUpdateInterval = 2.0 / 60.0
+            motionManager.startDeviceMotionUpdatesToQueue(NSOperationQueue.currentQueue()!) { [unowned self] motion, error in
+                
+                if error != nil { print("wtf. \(error)"); return }
+                guard let motion = motion else { print("Couldn't unwrap motion"); return }
+                
+                self.quaternionX = motion.attitude.quaternion.x
+                self.quaternionY = motion.attitude.quaternion.y
+            }
+        }
+    }
+```
+I've setup an interval here which  will determine how often the following block of code will be run. Imagine you're a kid in the back seat of a car and your Mom is doing her best driving you to Florida for vacation and you continue to nag her over and over and over again. This determines how often and at what interval we will nag Mom for (forever!) until we tell it to stop.  This interval is in seconds.
+
+What's going on in the `startDeviceMotionUpdatesToQueue(_:_:)` method. Well it takes in two arguments, one where we're providing the `NSOperationQueue.currentQueue()!` force un-wrapping it (might not be the best idea here, but for this demo we will force un-wrap it and move on). Next argument is a function of type `(CMDeviceMotion?, NSError?) -> Void` which means we have to provide the implementation of a function which takes in two arguments, one of type `CMDeviceMotion?`, the other of type `NSError?` which returns nothing. So we do that using closure expression syntax trailing after the first argument provided to the `startDeviceMotionUpdatesToQueue` method. So in our implementation (which will get called as often (over and over and over again)) as we dictated with the setting of the `deviceMotionUpdateInterval` property on the `motionManager` we will have access to a `CMDeviceMotion` object. That object contains a LOT of information we could utilize.
+
+First we check to see if error is not nil, meaning.. there is an error and something went wrong! so lets not move forward. We should handle errors better than that here, but lets carry on.
+
+Considering the first argument to this function is of type `CMDeviceMotion?` it means it can be nil, it's an optional `CMDeviceMotion`. So we use the guard statement to make sure it's not nil and move forward. 
+
+`CMDeviceMotion` has an incredible amount of instance properties available to it. In this scenario (through some trial & error), I found that the best one to move the image around as I moved the iPhone was 
+`attitude`. This `attitude` instance property is of type `CMAttitude` which itself has a property called `quaternion` which we will be utilizing. The `quaternion` property returns a `quaternion` representing the device's attitude.
+
+The properties available on `CMQuaternion` object are the following:
+
+```swift
+    public var x: Double
+    public var y: Double
+    public var z: Double
+    public var w: Double
+```
+
+We're most concerned with the `x` and `y` values only (for this demo) which will help us determine how the person is moving their iPhone around.
+
+The type of `x` and `y` here of type `Double` which matches our `quaternionX` & `quaternionY` instance properties on the `ViewController`, so lets assign these values to those properties like so:
+
+```swift
+self.quaternionX = motion.attitude.quaternion.x
+self.quaternionY = motion.attitude.quaternion.y
+```
+
+This block of code is getting called over and over and over again until we tell it stop. So it's constantly passing through a new `motion` object which has these properties available to it which we're reading and assigning to our own instance property on the `ViewController`. If we were to add `print()` statements within this block of code, we would see it being called a lot (and fast). 
+
+Ok, so we're setting a value to an instance property on our `ViewController`, lets take a look at those instance properties:
+
+
+```swift
+    var quaternionX: Double = 0.0 {
+        didSet {
+            if !foundTreasure { treasure.item.center.y = (CGFloat(quaternionX) * view.bounds.size.width - 180) * 4.0 }
+        }
+    }
+    
+    var quaternionY: Double = 0.0 {
+        didSet {
+            if !foundTreasure { treasure.item.center.x = (CGFloat(quaternionY) * view.bounds.size.height + 100) * 4.0 }
+        }
+    }
+```
+
+We setup `didSet` observers on both of these instance properties. So every time we assign a value to them (which we do often), the piece of code in that `didSet` block will get run (which again, will happen often). So what's happening in those `didSet` blocks:
+
+```swift
+if !foundTreasure { 
+	treasure.item.center.y = (CGFloat(quaternionX) * view.bounds.size.width - 180) * 4.0 
+}
+
+if !foundTreasure { 
+	treasure.item.center.x = (CGFloat(quaternionY) * view.bounds.size.height + 100) * 4.0 }
+}
+```
+
+We are moving the `treasure ` object around the screen dependent on the new values produced by whats on the other side of the equal sign. The math used here was done to simulate a slight movement to the object so it didn't appear static on the screen. I would argue that this might not be the best approach but it's an approach that got this working to how I liked. 
+
+We move the iPhone around and we have a slight bounce / movement to the treasure object to make it appear somewhat real-life like.
+
+`foundTreasure` is an instance property of type `Bool` which we set to `true` when someone taps on the treasure object (something we do later on). The reason we're checking to see that it's not `true` is here because after they tap the `treasure` object on screen, I want to set `foundTreasure` to `true` so that way we don't move the treasure object on screen anymore. This is more of a safety check considering that we stop the `motionManager` from doing its thing when a treasure object is tapped so these property observers would stop being called anyway as soon as an object is tapped.
+
+That should be everything to get this image displayed on screen where when you move your iPhone around it should move with you!
+
+# setupGestureRecognizer() & setupDismissButton()
+
+To see how we setup the gesture recognizer, animations and dismiss button - check out our source code:
+
+[ViewController.swift](https://github.com/learn-co-curriculum/FlatironGO/blob/master/FlatironGo/ViewController.swift)
+
 
 ![bear](http://i.imgur.com/nAwylOw.png)
+
+# The contents of our Constants.swift file:
+
+```swift
+struct Constants {
+    static let mapBoxAccessToken = "YOUR_ACCESS_TOKEN_HERE"
+    static let styleUrl = "mapbox://styles/ianrahman/ciqodpgxe000681nm8xi1u1o9"
+    static let bullImage = "https://firebasestorage.googleapis.com/v0/b/flatiron-go.appspot.com/o/images%2Fchargingbull.png?alt=media&token=73e58c88-2172-4218-b78d-67125f8514dc"
+}
+
+struct FIRReferencePath {
+    static let treasureLocations = "treasureLocations"
+    static let treasureProfiles = "treasureProfiles"
+}
+
+struct FIRStorageReference {
+    static let storageBucket = "YOUR_URL_HERE"
+}
+```
 
 
 
