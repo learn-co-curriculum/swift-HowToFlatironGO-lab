@@ -19,7 +19,8 @@ The various components of this app consist of using:
 # Quick Note:
 
 # Contents
-     - [Firebase](#firebase) 
+* [Firebase](#firebase) 
+* [Map](#map)
 
 
 If you prefer to jump right to the Augmented Reality Portion, scroll down until you see the heading "Augmented Reality Portion", or click [here](#map).
@@ -28,6 +29,7 @@ If you prefer to jump right to the Augmented Reality Portion, scroll down until 
 ---
 
 # Firebase 
+
 Setup a [Firebase](https://www.firebase.com) account. We will be utilizing the database & storage that a firebase account can provide. Get your XCode project up and running with firebase.
 
 We installed Firebase into our Xcode project using Cocoapods. This isn't all the contents of our `Podfile`, just the portion that relates to Firebase.
