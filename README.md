@@ -9,8 +9,6 @@ The various components of this app consist of using:
 
 ### Setting up our database and our map view:
 
-![](https://i.imgur.com/iH0HDpt.png)
-
 * [Firebase](#firebase) 
 * [Maps](#map)
 * [Maps, part 2](#back-to-maps)
@@ -24,9 +22,6 @@ The various components of this app consist of using:
 
 ### Setting up Augmented Reality:
 
-![](https://i.imgur.com/wKJBOh1.png) 
-
-
 * [Augmented Reality](#augmented-reality)
 * [Brief Overview](#brief-overview)
 * [Camera Device](#setupcapturecameradevice)
@@ -34,6 +29,10 @@ The various components of this app consist of using:
 * [Motion Manager](#setupmotionmanager)
 * [Gesture Recognizer & Dismiss Button](#setupgesturerecognizer-and-setupdismissbutton)
 
+
+![](https://i.imgur.com/iH0HDpt.png)
+
+![](https://i.imgur.com/wKJBOh1.png) 
 
 
 
