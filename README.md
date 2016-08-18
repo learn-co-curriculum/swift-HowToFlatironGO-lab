@@ -7,6 +7,8 @@ The various components of this app consist of using:
 
 # Contents
 
+Note: Feel free to jump right to the augmented reality section to get this up and running in your own project.
+
 ### Setting up our database and our map view:
 
 * [Firebase](#firebase) 
