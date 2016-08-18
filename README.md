@@ -23,7 +23,7 @@ The various components of this app consist of using:
 * [Map](#map)
 * [Map, part 2](#back-to-maps)
 * [Treasures](#treasures)
-* [Map & Treasures](#maps-and-Treasure)
+* [Map & Treasures](#maps-and-treasure)
 * [Users Current Location](#users-current-location)
 * [Map View Delegate](#map-view-delegate)
 
