@@ -21,10 +21,11 @@ The various components of this app consist of using:
 # Contents
 * [Firebase](#firebase) 
 * [Map](#map)
-* [Map, part 2](#map-(part-2))
-* [Map & Treasures](#back-to-xcode-(maps-stuff))
+* [Map, part 2](#back-to-maps)
+* [Treasures](#treasures)
+* [Map & Treasures](#maps-and-Treasure)
 * [Users Current Location](#users-current-location)
-* [Map View Delegate](#being-the-map-view-delegate.-creating-the-treasure-images-on-screen.)
+* [Map View Delegate](#map-view-delegate)
 
 
 
@@ -204,7 +205,7 @@ Create a new `Treasure.swift` file with the following contents.
 An instance of `Treasure` is made up of various properties and methods. It has a `location`, `name` and `item` which are most important. The `item` instance property will come into use later when we get to the Augmented Reality portion. The `Treasure` instance will be able to download its own image as well as create the `item` which is of type `CALayer` when it's required later. Any logic or functionality associated with a treasure object is done here in our implementation of the `Treasure` class to keeps things very simple for us.
 
 
-# Map (Part 2)
+# Back to Maps
 
 Head back to the `MapViewController.swift` file. Lets create another extension, labeling it as "Treasure Methods"
 
@@ -243,7 +244,7 @@ So now when we head back to Xcode, how can make the connection here to this part
 
 *NOTE*: How did we get this info on firebase? That will be discussed shortly.
 
-# Back to Xcode (maps stuff)
+# Maps and Treasure
 
 Going back to our extension, lets add a `typealias` in there to make our lives easier.
 
@@ -442,7 +443,7 @@ override func viewDidLoad() {
     }
 ```
 
-# Being the Map View Delegate. Creating the treasure images on screen.
+# Map View Delegate
 
 Check out the extension on `MapViewController` where we adopt the `MGLMapViewDelegate` protocol. Above this extension, we marked it as "MapView Delegate Methods":
 
