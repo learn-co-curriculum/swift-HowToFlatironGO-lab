@@ -19,6 +19,7 @@ The various components of this app consist of using:
 * [Users Current Location](#users-current-location)
 * [Map View Delegate](#map-view-delegate)
 * [Tapping the treasure icon](#tapping-the-treasure-icon)
+* [Constants file](#constants-file)
 
 
 ### Setting up Augmented Reality:
@@ -28,7 +29,10 @@ The various components of this app consist of using:
 
 * [Augmented Reality](#augmented-reality)
 * [Brief Overview](#brief-overview)
-* [Camera Device](#setupCaptureCameraDevice())
+* [Camera Device](#setupcapturecameradevice)
+* [Preview Layer](#setuppreviewlayer)
+* [Motion Manager](#setupmotionmanager)
+* [Gesture Recognizer & Dismiss Button](#setupgesturerecognizer-and-setupdismissbutton)
 
 
 
@@ -537,7 +541,7 @@ Without discussing exactly what these various instance properties do yet, I woul
     var foundTreasure = false
 ```
 
-# setupCaptureCameraDevice()
+# setupCaptureCameraDevice
 
 What we will be creating:
 
@@ -575,7 +579,7 @@ Next we want to call on the `addInput(_:)` method available to instances of `AVC
 Lastly, we call `startRunning()` on our `captureSession` instance property. This begins the flow of data from inputs to outputs connected to our `AvCaptureSession` instance. We are not handling any errors that might come of this `startRunning()` method which is something we should look into if we were to release this app.
 
 
-# setupPreviewLayer()
+# setupPreviewLayer
 
 What we will be creating:
 
@@ -644,7 +648,7 @@ That conversion is happening in this function within `Treasure`'s implementation
 This is why we're adding `treasure.item` to the `previewLayer` in the function `addSublayer(_:)`. After we do that, we need to now add the `previewLayer` object to our `view`'s `layer` property in the `addSublayer(_:)` method.
 
 
-# setupMotionManager()
+# setupMotionManager
 
 What we will be creating:
 
@@ -779,7 +783,7 @@ We move the iPhone around and we have a slight bounce / movement to the treasure
 
 That should be everything to get this image displayed on screen where when you move your iPhone around it should move with you!
 
-# setupGestureRecognizer() & setupDismissButton()
+# setupGestureRecognizer and setupDismissButton
 
 To see how we setup the gesture recognizer, animations and dismiss button - check out our source code:
 
@@ -788,7 +792,7 @@ To see how we setup the gesture recognizer, animations and dismiss button - chec
 
 ![bear](http://i.imgur.com/nAwylOw.png)
 
-# The contents of our Constants.swift file:
+# Constants file
 
 ```swift
 struct Constants {
