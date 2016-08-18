@@ -1,36 +1,39 @@
 # Flatiron Go
 
+The various components of this app consist of using:
+
+[AVFoundation](https://developer.apple.com/av-foundation/), [CoreMotion](https://developer.apple.com/library/ios/documentation/CoreMotion/Reference/CoreMotion_Reference/), [UIKit](https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIKit_Framework/), [Firebase](https://www.firebase.com), [GeoFire](https://github.com/firebase/geofire-objc), [Mapbox](https://www.mapbox.com/ios-sdk/)
+
+
+# Contents
+
+### Setting up our database and our map view:
+
 ![](https://i.imgur.com/iH0HDpt.png)
+
+* [Firebase](#firebase) 
+* [Maps](#map)
+* [Maps, part 2](#back-to-maps)
+* [Treasures](#treasures)
+* [Maps & Treasures](#maps-and-treasure)
+* [Users Current Location](#users-current-location)
+* [Map View Delegate](#map-view-delegate)
+* [Tapping the treasure icon](#tapping-the-treasure-icon)
+
+
+### Setting up Augmented Reality:
 
 ![](https://i.imgur.com/wKJBOh1.png) 
 
 
-
-
-The various components of this app consist of using:
-* [AVFoundation](https://developer.apple.com/av-foundation/)
-* [CoreMotion](https://developer.apple.com/library/ios/documentation/CoreMotion/Reference/CoreMotion_Reference/)
-* [UIKit](https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIKit_Framework/)
-* [Firebase](https://www.firebase.com)
-* [GeoFire](https://github.com/firebase/geofire-objc)
-* [Mapbox](https://www.mapbox.com/ios-sdk/)
-
-
-# Quick Note:
-
-# Contents
-* [Firebase](#firebase) 
-* [Map](#map)
-* [Map, part 2](#back-to-maps)
-* [Treasures](#treasures)
-* [Map & Treasures](#maps-and-treasure)
-* [Users Current Location](#users-current-location)
-* [Map View Delegate](#map-view-delegate)
+* [Augmented Reality](#augmented-reality-portion!)
 
 
 
 
-If you prefer to jump right to the Augmented Reality Portion, scroll down until you see the heading "Augmented Reality Portion", or click [here](#map).
+
+
+
 
 
 ---
@@ -450,7 +453,7 @@ Check out the extension on `MapViewController` where we adopt the `MGLMapViewDel
 [MapViewController.swift](https://github.com/learn-co-curriculum/FlatironGO/blob/master/FlatironGo/MapViewController.swift)
 
 
-# What happens when they tap a treasure icon on the map
+# Tapping the Treasure Icon
 
 Check out the extension on `MapViewController` marked "Segue Method". Here we implement the functionality to handle the tap of an annotation view and the segue we perform based upon this. The `TreasureAnnotationView` class has an instance property called `treasure` of type `Treasure`.
 
