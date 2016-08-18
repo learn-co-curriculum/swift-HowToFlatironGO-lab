@@ -27,6 +27,8 @@ The various components of this app consist of using:
 
 
 * [Augmented Reality](#augmented-reality)
+* [Brief Overview](#brief-overview)
+* [Camera Device](#setupCaptureCameraDevice())
 
 
 
